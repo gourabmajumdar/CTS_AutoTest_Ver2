@@ -9,8 +9,6 @@ let currentOperation = null;
 let ingestedTestCases = [];
 let generatedScripts = [];
 let executionResults = [];
-// 1. ADD THESE NEW GLOBAL VARIABLES (add to existing global variables section)
-let selectedTestCases = new Set(); // Track which test cases are selected for execution
 
 // Progress tracking variables
 let progressPollingInterval = null;
@@ -854,27 +852,16 @@ function autoResizeTestTextarea(index) {
 // ================================================================================================
 // MULTI-TEST AREA MANAGEMENT
 // ================================================================================================
-// 2. UPDATED: Master control panel without Smart Select button
 function createMultiTestAreas() {
-    // FIXED: Only create multi-test areas if there are MULTIPLE scripts
+    // Only create multi-test areas if there are multiple scripts
     if (!generatedScripts || generatedScripts.length <= 1) {
-        console.log('🏗️ Single or no test case - using single test area mode');
-
-        // For single test case, make sure execute button is properly set
-        updateExecuteButtonState();
-
-        // Make sure single text area is visible
-        const singleTextAreaContainer = document.querySelector('.text-area-container');
-        if (singleTextAreaContainer) {
-            singleTextAreaContainer.style.display = 'block';
-        }
-
+        console.log('🏗️ Single or no test case - skipping multi-test areas');
         return;
     }
 
-    // Rest of your existing createMultiTestAreas() function stays exactly the same...
     console.log('🏗️ Creating multi-test areas for', generatedScripts.length, 'scripts');
 
+    // FIXED: Target the AutoTest content area specifically, not the main dashboard container
     const autoTestContent = document.getElementById('autoTestContent');
 
     if (!autoTestContent) {
@@ -894,82 +881,6 @@ function createMultiTestAreas() {
     multiTestAreas.className = 'multi-test-areas';
     multiTestAreas.style.marginBottom = '25px';
 
-    // ✨ CLEANED UP: Master Control Panel without Smart Select
-    const masterControlPanel = document.createElement('div');
-    masterControlPanel.id = 'masterControlPanel';
-    masterControlPanel.className = 'master-control-panel';
-    masterControlPanel.style.cssText = `
-        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-        border: 2px solid #0ea5e9;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 25px;
-        display: none;
-        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.15);
-        animation: slideInFromTop 0.5s ease-out;
-    `;
-
-    masterControlPanel.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <!-- Master Checkbox -->
-                <div style="
-                    background: white;
-                    border: 2px solid #0ea5e9;
-                    border-radius: 10px;
-                    padding: 12px 16px;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
-                ">
-                    <input 
-                        type="checkbox" 
-                        id="masterExecuteCheckbox" 
-                        checked 
-                        onchange="toggleAllTests(this.checked)"
-                        style="
-                            width: 20px;
-                            height: 20px;
-                            accent-color: #0ea5e9;
-                            cursor: pointer;
-                        "
-                    >
-                    <label for="masterExecuteCheckbox" style="
-                        font-weight: 600;
-                        color: #0c4a6e;
-                        cursor: pointer;
-                        font-size: 1rem;
-                        margin: 0;
-                    ">
-                        Select All Tests for Execution
-                    </label>
-                </div>
-                
-                <!-- Test Count Display -->
-                <div id="testCountDisplay" style="
-                    background: #0ea5e9;
-                    color: white;
-                    padding: 8px 16px;
-                    border-radius: 25px;
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
-                ">
-                    ${generatedScripts.length} Tests Total
-                </div>
-            </div>
-        </div>
-    `;
-
-    multiTestAreas.appendChild(masterControlPanel);
-
-    // Initialize all test cases as selected by default
-    selectedTestCases.clear();
-    generatedScripts.forEach(script => {
-        selectedTestCases.add(script.id);
-    });
-
     // Create test areas for each generated script
     generatedScripts.forEach((script, index) => {
         const testAreaGroup = document.createElement('div');
@@ -980,7 +891,6 @@ function createMultiTestAreas() {
             border-radius: 15px;
             overflow: hidden;
             background: rgba(255, 255, 255, 0.9);
-            transition: all 0.3s ease;
         `;
 
         testAreaGroup.innerHTML = `
@@ -993,37 +903,8 @@ function createMultiTestAreas() {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                position: relative;
-                overflow: hidden;
             ">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <!-- Individual Execution Checkbox -->
-                    <div class="execution-checkbox-container" style="
-                        display: none;
-                        background: rgba(255, 255, 255, 0.2);
-                        border-radius: 8px;
-                        padding: 8px 12px;
-                        border: 1px solid rgba(255, 255, 255, 0.3);
-                        backdrop-filter: blur(10px);
-                    " id="checkboxContainer${index}">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
-                            <input 
-                                type="checkbox" 
-                                id="executeCheckbox${index}" 
-                                checked 
-                                onchange="toggleTestSelection(${script.id}, this.checked)"
-                                style="
-                                    width: 18px;
-                                    height: 18px;
-                                    accent-color: #22c55e;
-                                    cursor: pointer;
-                                "
-                            >
-                            <span style="color: white; font-weight: 500;">Execute this test</span>
-                        </label>
-                    </div>
-                    <span>Test Case ${script.id}: ${script.test_case_name}</span>
-                </div>
+                <span>Test Case ${script.id}: ${script.test_case_name}</span>
                 <div style="
                     background: rgba(255, 255, 255, 0.2);
                     border-radius: 50%;
@@ -1113,6 +994,7 @@ function createMultiTestAreas() {
         multiTestAreas.appendChild(testAreaGroup);
     });
 
+    // FIXED: Insert into AutoTest content area instead of main dashboard container
     autoTestContent.appendChild(multiTestAreas);
 
     // Hide single text area only when showing multi-test areas
@@ -1121,291 +1003,7 @@ function createMultiTestAreas() {
         singleTextAreaContainer.style.display = 'none';
     }
 
-    console.log('✅ Multi-test areas created successfully with clean master control panel');
-}
-
-// 2. NEW: Master checkbox toggle function
-function toggleAllTests(isChecked) {
-    console.log(`🎛️ Master toggle: ${isChecked ? 'Selecting' : 'Deselecting'} all tests`);
-
-    if (isChecked) {
-        selectAllTests();
-    } else {
-        deselectAllTests();
-    }
-
-    // Update master checkbox appearance
-    updateMasterCheckbox();
-}
-
-
-// 3. ADD NEW FUNCTIONS for checkbox management
-function toggleTestSelection(testCaseId, isSelected) {
-    console.log(`🎯 Test case ${testCaseId} selection toggled: ${isSelected}`);
-
-    if (isSelected) {
-        selectedTestCases.add(testCaseId);
-    } else {
-        selectedTestCases.delete(testCaseId);
-    }
-
-    updateExecuteButtonState();
-    updateSelectionSummary();
-    updateMasterCheckbox(); // NEW: Update master checkbox state
-
-    console.log(`📋 Selected test cases: [${Array.from(selectedTestCases).join(', ')}]`);
-}
-
-// 4. NEW: Update master checkbox based on individual selections
-function updateMasterCheckbox() {
-    const masterCheckbox = document.getElementById('masterExecuteCheckbox');
-    if (!masterCheckbox) return;
-
-    const totalTests = generatedScripts.length;
-    const selectedCount = selectedTestCases.size;
-
-    if (selectedCount === 0) {
-        masterCheckbox.checked = false;
-        masterCheckbox.indeterminate = false;
-    } else if (selectedCount === totalTests) {
-        masterCheckbox.checked = true;
-        masterCheckbox.indeterminate = false;
-    } else {
-        masterCheckbox.checked = false;
-        masterCheckbox.indeterminate = true; // Partial selection
-    }
-
-    // Update test count display
-    const testCountDisplay = document.getElementById('testCountDisplay');
-    if (testCountDisplay) {
-        if (selectedCount === totalTests) {
-            testCountDisplay.textContent = `All ${totalTests} Tests Selected`;
-            testCountDisplay.style.background = '#22c55e';
-        } else if (selectedCount === 0) {
-            testCountDisplay.textContent = `No Tests Selected (${totalTests} Available)`;
-            testCountDisplay.style.background = '#ef4444';
-        } else {
-            testCountDisplay.textContent = `${selectedCount} of ${totalTests} Tests Selected`;
-            testCountDisplay.style.background = '#f59e0b';
-        }
-    }
-}
-
-function updateExecuteButtonState() {
-    const executeBtn = document.getElementById('executeBtn');
-    if (!executeBtn) return;
-
-    if (!generatedScripts || generatedScripts.length === 0) {
-        // No scripts available
-        executeBtn.disabled = true;
-        executeBtn.textContent = 'Execute Code';
-        executeBtn.classList.remove('selective-execution');
-        return;
-    }
-
-    if (generatedScripts.length === 1) {
-        // Single test case: always enabled, simple text
-        executeBtn.disabled = false;
-        executeBtn.textContent = 'Execute Code';
-        executeBtn.classList.remove('selective-execution');
-        console.log('🔘 Execute button: Single test mode');
-    } else {
-        // Multiple test cases: selection-based
-        const selectedCount = selectedTestCases.size;
-        const totalCount = generatedScripts.length;
-
-        if (selectedCount === 0) {
-            executeBtn.disabled = true;
-            executeBtn.textContent = 'Execute Code (Select Tests First)';
-            executeBtn.classList.add('selective-execution');
-        } else if (selectedCount === totalCount) {
-            executeBtn.disabled = false;
-            executeBtn.textContent = 'Execute All Tests';
-            executeBtn.classList.add('selective-execution');
-        } else {
-            executeBtn.disabled = false;
-            executeBtn.textContent = `Execute Selected Tests (${selectedCount}/${totalCount})`;
-            executeBtn.classList.add('selective-execution');
-        }
-
-        console.log(`🔘 Execute button: Multi-test mode (${selectedCount}/${totalCount} selected)`);
-    }
-}
-
-// 1. UPDATED: Clean selection summary without redundant buttons
-function updateSelectionSummary() {
-    const selectedCount = selectedTestCases.size;
-    const totalCount = generatedScripts ? generatedScripts.length : 0;
-
-    // Remove any existing selection summary
-    const existingSummary = document.getElementById('selectionSummary');
-    if (existingSummary) {
-        existingSummary.remove();
-    }
-
-    // Only show summary if we have tests and some are selected
-    if (totalCount === 0) return;
-
-    // Create clean selection summary without buttons
-    const summaryDiv = document.createElement('div');
-    summaryDiv.id = 'selectionSummary';
-    summaryDiv.className = 'selection-summary';
-
-    // Simple, clean summary without redundant buttons
-    summaryDiv.innerHTML = `
-        <div class="selection-summary-info">
-            <div class="selection-count-badge">${selectedCount}</div>
-            <div>
-                <div class="selection-text">${selectedCount} of ${totalCount} tests selected for execution</div>
-                <div class="selection-details">Selected: Test Cases ${Array.from(selectedTestCases).sort((a, b) => a - b).join(', ')}</div>
-            </div>
-        </div>
-    `;
-
-    // Insert before the execute button
-    const executeBtn = document.getElementById('executeBtn');
-    if (executeBtn && executeBtn.parentNode) {
-        executeBtn.parentNode.insertBefore(summaryDiv, executeBtn.parentNode.querySelector('.buttons'));
-    }
-
-    console.log(`📊 Selection summary updated: ${selectedCount}/${totalCount} tests selected`);
-}
-
-// 5. ENHANCED: Select all with master checkbox update
-function selectAllTests() {
-    console.log('✅ Selecting all tests');
-
-    generatedScripts.forEach((script, index) => {
-        selectedTestCases.add(script.id);
-        const checkbox = document.getElementById(`executeCheckbox${index}`);
-        if (checkbox) {
-            checkbox.checked = true;
-        }
-    });
-
-    updateExecuteButtonState();
-    updateSelectionSummary();
-    updateMasterCheckbox();
-}
-
-// 6. ENHANCED: Deselect all with master checkbox update
-function deselectAllTests() {
-    console.log('❌ Deselecting all tests');
-
-    selectedTestCases.clear();
-
-    generatedScripts.forEach((script, index) => {
-        const checkbox = document.getElementById(`executeCheckbox${index}`);
-        if (checkbox) {
-            checkbox.checked = false;
-        }
-    });
-
-    updateExecuteButtonState();
-    updateSelectionSummary();
-    updateMasterCheckbox();
-}
-
-// 7. NEW: Smart selection based on review results (placeholder logic)
-/*
-function selectRecommended() {
-    console.log('⭐ Smart selecting recommended tests');
-
-    // Clear current selection
-    selectedTestCases.clear();
-
-    // Smart logic: Select tests that don't have obvious error indicators
-    generatedScripts.forEach((script, index) => {
-        const textarea = document.getElementById(`testArea${index}`);
-        const content = textarea ? textarea.value.toLowerCase() : '';
-
-        // Simple heuristic: avoid tests with error indicators
-        const hasErrors = content.includes('[fail]') ||
-                         content.includes('error:') ||
-                         content.includes('critical') ||
-                         content.includes('security vulnerability') ||
-                         content.includes('static code analysis fails');
-
-        const checkbox = document.getElementById(`executeCheckbox${index}`);
-        if (checkbox) {
-            if (!hasErrors || content.includes('[pass]')) {
-                selectedTestCases.add(script.id);
-                checkbox.checked = true;
-            } else {
-                checkbox.checked = false;
-            }
-        }
-    });
-
-    updateExecuteButtonState();
-    updateSelectionSummary();
-    updateMasterCheckbox();
-
-    const selectedCount = selectedTestCases.size;
-    const totalCount = generatedScripts.length;
-    const skippedCount = totalCount - selectedCount;
-
-    if (skippedCount > 0) {
-        showToast(`Smart selection: Selected ${selectedCount} tests, skipped ${skippedCount} tests with potential issues`, 'warning');
-    } else {
-        showToast(`Smart selection: All ${selectedCount} tests look good for execution!`, 'success');
-    }
-}
-*/
-// 8. ENHANCED: Show checkboxes with master control panel
-function showExecutionCheckboxes() {
-    console.log('👁️ Showing execution checkboxes and master control panel');
-
-    // Show master control panel
-    const masterControlPanel = document.getElementById('masterControlPanel');
-    if (masterControlPanel) {
-        masterControlPanel.style.display = 'block';
-    }
-
-    // Show individual checkboxes
-    generatedScripts.forEach((script, index) => {
-        const checkboxContainer = document.getElementById(`checkboxContainer${index}`);
-        if (checkboxContainer) {
-            checkboxContainer.style.display = 'block';
-        }
-    });
-
-    updateExecuteButtonState();
-    updateSelectionSummary();
-    updateMasterCheckbox();
-}
-
-// 9. ENHANCED: Hide checkboxes with master control panel
-function hideExecutionCheckboxes() {
-    console.log('🙈 Hiding execution checkboxes and master control panel');
-
-    // Hide master control panel
-    const masterControlPanel = document.getElementById('masterControlPanel');
-    if (masterControlPanel) {
-        masterControlPanel.style.display = 'none';
-    }
-
-    // Hide individual checkboxes
-    generatedScripts.forEach((script, index) => {
-        const checkboxContainer = document.getElementById(`checkboxContainer${index}`);
-        if (checkboxContainer) {
-            checkboxContainer.style.display = 'none';
-        }
-    });
-
-    // Remove selection summary
-    const existingSummary = document.getElementById('selectionSummary');
-    if (existingSummary) {
-        existingSummary.remove();
-    }
-}
-
-
-function areCheckboxesVisible() {
-    if (generatedScripts.length === 0) return false;
-
-    const firstCheckboxContainer = document.getElementById('checkboxContainer0');
-    return firstCheckboxContainer && firstCheckboxContainer.style.display !== 'none';
+    console.log('✅ Multi-test areas created successfully');
 }
 
 function hideMultiTestAreas() {
@@ -1788,12 +1386,6 @@ ${result.review_report || result.main_summary || 'Review completed successfully.
 
             if (reportButtons) reportButtons.classList.add('show');
 
-            // NEW: Show execution checkboxes after review completion
-            if (generatedScripts.length > 1) {
-                showExecutionCheckboxes();
-                console.log('✅ Execution checkboxes enabled after review completion');
-            }
-
             // ADD THIS LINE: Hide save buttons after review completion
             hideSaveButtons();
 
@@ -1831,88 +1423,63 @@ ${result.review_report || result.main_summary || 'Review completed successfully.
 // ================================================================================================
 // MAIN FUNCTIONALITY - EXECUTE CODE (WITH REAL PROGRESS)
 // ================================================================================================
-/*
+
+// REPLACE your existing executeCode() function with this version
+
 async function executeCode() {
-    console.log('🚀 Execute Code button clicked');
+    console.log('⚡ Starting code execution...');
+
+    // Check for reviewed scripts
+    if (generatedScripts.length === 0) {
+        showToast('Please generate and review Python test code first!', 'warning');
+        return;
+    }
+
+    // Add additional check to ensure review is completed
+    const reviewBtn = document.getElementById('reviewBtn');
+    if (reviewBtn && !reviewBtn.disabled && reviewBtn.textContent !== 'Review Completed ✓') {
+        showToast('Please complete code review before execution!', 'warning');
+        return;
+    }
+
+    const executeBtn = document.getElementById('executeBtn');
+    if (!executeBtn) return;
+
+    executeBtn.disabled = true;
+    executeBtn.classList.add('btn-loading');
 
     try {
-        // Check if we have any scripts to execute
-        if (!generatedScripts || generatedScripts.length === 0) {
-            showToast('No test scripts available for execution. Please generate scripts first.', 'error');
-            return;
-        }
-
-        // FIXED: Different logic for single vs multiple tests
-        let selectedTestIds;
-
-        if (generatedScripts.length === 1) {
-            // For single test case: always execute without selection requirement
-            console.log('📝 Single test case detected - executing without selection');
-            selectedTestIds = [generatedScripts[0].id];
-        } else {
-            // For multiple test cases: require selection
-            if (selectedTestCases.size === 0) {
-                showToast('Please select at least one test case for execution.', 'warning');
-                return;
-            }
-            selectedTestIds = Array.from(selectedTestCases);
-            console.log('📝 Multiple test cases - executing selected:', selectedTestIds);
-        }
-
-        // Disable execute button during execution
-        const executeBtn = document.getElementById('executeBtn');
-        if (executeBtn) {
-            executeBtn.disabled = true;
-            executeBtn.classList.add('btn-loading');
-        }
-
         // Start real progress tracking
-        const selectedCount = selectedTestIds.length;
-        const totalCount = generatedScripts.length;
-
-        let progressTitle = `Executing ${selectedCount} Selected Python Test${selectedCount > 1 ? 's' : ''}`;
-        if (selectedCount === totalCount) {
-            progressTitle = 'Executing All Python Tests';
-        }
-
-        startRealProgress('execute', progressTitle, [
+        startRealProgress('execute', 'Executing Reviewed Python Test Code', [
             'Preparing Python execution environment',
             'Connecting to test infrastructure',
-            'Running selected Python test cases',
+            'Running reviewed Python test cases',
             'Collecting test results',
             'Generating execution output'
         ]);
 
-        console.log(`🎯 Executing ${selectedTestIds.length} test case(s):`, selectedTestIds);
-
-        // Make the API call with selected test IDs
         const response = await fetch('/execute', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                selected_test_ids: selectedTestIds
-            })
+            body: JSON.stringify({})
         });
 
         const result = await response.json();
         console.log('🚀 Execution result:', result);
 
         if (result.success) {
-            // ✅ SUCCESS PATH - FIXED RESULT MAPPING
+            // ✅ SUCCESS PATH - unchanged behavior
+
             // Store execution results
             executionResults = result.execution_results;
 
-            // FIXED: Map results by test case ID instead of array index
-            executionResults.forEach((execResult) => {
-                // Find the textarea index that corresponds to this test case ID
-                const scriptIndex = generatedScripts.findIndex(script => script.id === execResult.test_case_id);
-
-                if (scriptIndex !== -1) {
-                    const textarea = document.getElementById(`testArea${scriptIndex}`);
-                    if (textarea) {
-                        const executionOutput = `=== EXECUTION RESULTS ===
+            // Update text areas with execution results
+            executionResults.forEach((execResult, index) => {
+                const textarea = document.getElementById(`testArea${index}`);
+                if (textarea) {
+                    const executionOutput = `=== EXECUTION RESULTS ===
 Test Case: ${execResult.test_case_name}
 Script: ${execResult.script_name}
 Connected Host: ${result.connected_host}
@@ -1928,16 +1495,13 @@ ${execResult.stderr}
 === EXECUTION COMPLETED ===
 ✅Test: ${execResult.test_case_name} Execution Done`;
 
-                        textarea.value = executionOutput;
-                        updateTestAreaCharCount(scriptIndex);
-                        autoResizeTestTextarea(scriptIndex);
-                    }
-                } else {
-                    console.warn(`Could not find textarea for test case ID ${execResult.test_case_id}`);
+                    textarea.value = executionOutput;
+                    updateTestAreaCharCount(index);
+                    autoResizeTestTextarea(index);
                 }
             });
 
-            // FIXED: Single test case handling using test case ID mapping
+            // Single test case handling
             if (executionResults.length === 1 && elements.textArea) {
                 const singleResult = executionResults[0];
                 const singleExecution = `=== EXECUTION RESULTS ===
@@ -1967,7 +1531,7 @@ ${singleResult.stderr}
 
             executeBtn.disabled = true;
             executeBtn.classList.remove('btn-loading');
-            executeBtn.textContent = `Executed ${selectedCount} Test${selectedCount > 1 ? 's' : ''} ✓`;
+            executeBtn.textContent = 'Code Executed ✓';
             executeBtn.style.opacity = '0.6';
             executeBtn.style.cursor = 'not-allowed';
 
@@ -1981,449 +1545,70 @@ ${singleResult.stderr}
                 reviewBtn.style.opacity = '0.6';
             }
 
-            // Hide checkboxes after execution (only for multiple tests)
-            if (generatedScripts.length > 1) {
-                hideExecutionCheckboxes();
-            }
-
-            showToast(`Successfully executed ${selectedCount} test${selectedCount > 1 ? 's' : ''} out of ${totalCount} total!`, 'success');
+            showToast(`Executed ${executionResults.length} reviewed Python test scripts successfully!`, 'success');
             hideSaveButtons();
 
         } else {
-            // Error handling - unchanged from your original
+            // ❌ ERROR PATH - enhanced with modal for connection errors
+
             console.error('❌ Execute failed:', result.message);
+
+            // Stop progress polling on failure
             stopProgressPolling();
             hideProgress();
 
+            // IMPORTANT: Reset button state so user can retry
             executeBtn.disabled = false;
             executeBtn.classList.remove('btn-loading');
-            updateExecuteButtonState();
+            executeBtn.textContent = 'Execute Code';
+            executeBtn.style.opacity = '1';
+            executeBtn.style.cursor = 'pointer';
 
+            // NEW: Show modal for connection failures, toast for other errors
             if (result.message.includes('Raspberry Pi') ||
                 result.message.includes('connection') ||
                 result.message.includes('connect')) {
+
                 showErrorModal(
                     'Test Execution Failed',
                     result.message,
                     'Unable to establish connection with the remote test infrastructure. Please verify that the Test devices are online and accessible from your network.'
                 );
             } else {
+                // Regular toast for non-connection errors
                 showToast(result.message, 'error');
             }
         }
 
     } catch (error) {
-        // Error handling - unchanged from your original
+        // ❌ NETWORK/FETCH ERROR PATH
+
         console.error('❌ Execution error:', error);
+
+        // Stop progress polling on error
         stopProgressPolling();
         hideProgress();
 
+        // IMPORTANT: Reset button state so user can retry
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
-        updateExecuteButtonState();
+        executeBtn.textContent = 'Execute Code';
+        executeBtn.style.opacity = '1';
+        executeBtn.style.cursor = 'pointer';
 
+        // NEW: Show modal for network/fetch errors, toast for other errors
         if (error.message.includes('fetch') ||
             error.message.includes('network') ||
             error.message.includes('connection') ||
             error.message.includes('Failed to fetch')) {
+
             showErrorModal(
                 'Network Connection Error',
                 'Failed to communicate with the test server.',
                 `Technical Details: ${error.message}\n\nThis could be due to network connectivity issues or server unavailability.`
             );
         } else {
-            showToast('Code execution failed: ' + error.message, 'error');
-        }
-    }
-}
-*/
-
-// NEW FUNCTION: Parse execution output to determine actual test pass/fail status
-function parseTestResult(executionOutput, scriptSuccess) {
-    console.log('🔍 Parsing test result for pass/fail determination');
-
-    const stdout = executionOutput.stdout || '';
-    const stderr = executionOutput.stderr || '';
-    const combinedOutput = (stdout + ' ' + stderr).toLowerCase();
-
-    // If script didn't execute successfully at all, it's definitely a failure
-    if (!scriptSuccess) {
-        return {
-            status: 'failed',
-            reason: 'Script execution failed',
-            color: '#ef4444',
-            text: 'Failed ✗'
-        };
-    }
-
-    // Define patterns that indicate test failure
-    const failurePatterns = [
-        /\[fail\]/i,
-        /\[failed\]/i,
-        /test.*fail/i,
-        /fail.*test/i,
-        /error:/i,
-        /exception/i,
-        /assertion.*fail/i,
-        /test.*not.*pass/i,
-        /does not match/i,
-        /mismatch/i,
-        /incorrect/i,
-        /invalid/i,
-        /test result:.*fail/i,
-        /status:.*fail/i,
-        /result:.*fail/i
-    ];
-
-    // Define patterns that indicate test success/pass
-    const successPatterns = [
-        /\[pass\]/i,
-        /\[passed\]/i,
-        /test.*pass/i,
-        /pass.*test/i,
-        /test.*success/i,
-        /success.*test/i,
-        /test result:.*completed/i,
-        /test result:.*success/i,
-        /test result:.*pass/i,
-        /status:.*success/i,
-        /status:.*pass/i,
-        /result:.*success/i,
-        /result:.*pass/i,
-        /completed successfully/i,
-        /test.*completed/i,
-        /all.*tests.*pass/i
-    ];
-
-    // Check for explicit failure indicators first
-    for (const pattern of failurePatterns) {
-        if (pattern.test(combinedOutput)) {
-            return {
-                status: 'failed',
-                reason: 'Test assertion failed',
-                color: '#ef4444',
-                text: 'Failed ✗'
-            };
-        }
-    }
-
-    // Check for explicit success indicators
-    for (const pattern of successPatterns) {
-        if (pattern.test(combinedOutput)) {
-            return {
-                status: 'passed',
-                reason: 'Test completed successfully',
-                color: '#22c55e',
-                text: 'Passed ✓'
-            };
-        }
-    }
-
-    // Default: Script executed successfully but no clear pass/fail indicators
-    return {
-        status: 'executed',
-        reason: 'Executed successfully (result unclear)',
-        color: '#3b82f6',
-        text: 'Executed ✓'
-    };
-}
-// ================================================================================================
-// ENHANCED EXECUTE CODE FUNCTION WITH STATUS INDICATORS
-// ================================================================================================
-
-async function executeCode() {
-    console.log('🚀 Execute Code button clicked');
-
-    try {
-        // Check if we have any scripts to execute
-        if (!generatedScripts || generatedScripts.length === 0) {
-            showToast('No test scripts available for execution. Please generate scripts first.', 'error');
-            return;
-        }
-
-        // FIXED: Different logic for single vs multiple tests
-        let selectedTestIds;
-
-        if (generatedScripts.length === 1) {
-            // For single test case: always execute without selection requirement
-            console.log('📝 Single test case detected - executing without selection');
-            selectedTestIds = [generatedScripts[0].id];
-        } else {
-            // For multiple test cases: require selection
-            if (selectedTestCases.size === 0) {
-                showToast('Please select at least one test case for execution.', 'warning');
-                return;
-            }
-            selectedTestIds = Array.from(selectedTestCases);
-            console.log('📝 Multiple test cases - executing selected:', selectedTestIds);
-        }
-
-        // Disable execute button during execution
-        const executeBtn = document.getElementById('executeBtn');
-        if (executeBtn) {
-            executeBtn.disabled = true;
-            executeBtn.classList.add('btn-loading');
-        }
-
-        // Start real progress tracking
-        const selectedCount = selectedTestIds.length;
-        const totalCount = generatedScripts.length;
-
-        let progressTitle = `Executing ${selectedCount} Selected Python Test${selectedCount > 1 ? 's' : ''}`;
-        if (selectedCount === totalCount) {
-            progressTitle = 'Executing All Python Tests';
-        }
-
-        startRealProgress('execute', progressTitle, [
-            'Preparing Python execution environment',
-            'Connecting to test infrastructure',
-            'Running selected Python test cases',
-            'Collecting test results',
-            'Generating execution output'
-        ]);
-
-        console.log(`🎯 Executing ${selectedTestIds.length} test case(s):`, selectedTestIds);
-
-        // NEW: Add status indicators to headers BEFORE execution
-        generatedScripts.forEach((script, index) => {
-            const testHeader = document.querySelector(`#multiTestAreas .test-area-group:nth-child(${index + 2}) .test-area-header`);
-            if (testHeader) {
-                // Remove any existing status indicators
-                const existingStatus = testHeader.querySelector('.execution-status');
-                if (existingStatus) {
-                    existingStatus.remove();
-                }
-
-                // Add status indicator
-                const statusDiv = document.createElement('div');
-                statusDiv.className = 'execution-status';
-                statusDiv.style.cssText = `
-                    position: absolute;
-                    top: 50%;
-                    right: 60px;
-                    transform: translateY(-50%);
-                    background: ${selectedTestIds.includes(script.id) ? '#f59e0b' : '#6b7280'};
-                    color: white;
-                    padding: 4px 12px;
-                    border-radius: 15px;
-                    font-size: 0.8rem;
-                    font-weight: 600;
-                    z-index: 10;
-                `;
-                statusDiv.textContent = selectedTestIds.includes(script.id) ? 'Executing...' : 'Not Selected';
-
-                testHeader.appendChild(statusDiv);
-            }
-        });
-
-        // Make the API call with selected test IDs
-        const response = await fetch('/execute', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                selected_test_ids: selectedTestIds
-            })
-        });
-
-        const result = await response.json();
-        console.log('🚀 Execution result:', result);
-
-        if (result.success) {
-            // ✅ SUCCESS PATH - FIXED RESULT MAPPING
-            // Store execution results
-            executionResults = result.execution_results;
-
-            // FIXED: Map results by test case ID instead of array index
-            executionResults.forEach((execResult) => {
-                // Find the textarea index that corresponds to this test case ID
-                const scriptIndex = generatedScripts.findIndex(script => script.id === execResult.test_case_id);
-
-                if (scriptIndex !== -1) {
-                    const textarea = document.getElementById(`testArea${scriptIndex}`);
-                    if (textarea) {
-                        const executionOutput = `=== EXECUTION RESULTS ===
-Test Case: ${execResult.test_case_name}
-Script: ${execResult.script_name}
-Connected Host: ${result.connected_host}
-Execution Status: ${execResult.success ? 'SUCCESS' : 'FAILED'}
-
-=== EXECUTION OUTPUT ===
-STDOUT:
-${execResult.stdout}
-
-STDERR:
-${execResult.stderr}
-
-=== EXECUTION COMPLETED ===
-✅Test: ${execResult.test_case_name} Execution Done`;
-
-                        textarea.value = executionOutput;
-                        updateTestAreaCharCount(scriptIndex);
-                        autoResizeTestTextarea(scriptIndex);
-                    }
-
-                    /*
-                    // NEW: Update header status to show execution completed
-                    const testHeader = document.querySelector(`#multiTestAreas .test-area-group:nth-child(${scriptIndex + 2}) .test-area-header`);
-                    if (testHeader) {
-                        const statusDiv = testHeader.querySelector('.execution-status');
-                        if (statusDiv) {
-                            statusDiv.style.background = execResult.success ? '#22c55e' : '#ef4444';
-                            statusDiv.textContent = execResult.success ? 'Executed ✓' : 'Failed ✗';
-                        }
-                    }*/
-                    // NEW: Update header status with smart pass/fail detection
-                    const testHeader = document.querySelector(`#multiTestAreas .test-area-group:nth-child(${scriptIndex + 2}) .test-area-header`);
-                    if (testHeader) {
-                        const statusDiv = testHeader.querySelector('.execution-status');
-                        if (statusDiv) {
-                            // Use smart parsing to determine actual test result
-                            const smartResult = parseTestResult(execResult, execResult.success);
-                            statusDiv.style.background = smartResult.color;
-                            statusDiv.textContent = smartResult.text;
-                            statusDiv.title = smartResult.reason; // Tooltip for details
-                        }
-                    }
-                } else {
-                    console.warn(`Could not find textarea for test case ID ${execResult.test_case_id}`);
-                }
-            });
-
-            // NEW: Update headers for NON-EXECUTED test cases
-            generatedScripts.forEach((script, index) => {
-                if (!selectedTestIds.includes(script.id)) {
-                    const testHeader = document.querySelector(`#multiTestAreas .test-area-group:nth-child(${index + 2}) .test-area-header`);
-                    if (testHeader) {
-                        const statusDiv = testHeader.querySelector('.execution-status');
-                        if (statusDiv) {
-                            statusDiv.style.background = '#6b7280';
-                            statusDiv.textContent = 'Not Executed, showing Code Review Results';
-                            statusDiv.style.fontSize = '1.0rem'; // Slightly smaller for longer text
-                            statusDiv.style.padding = '4px 8px';
-                        }
-                    }
-                }
-            });
-
-            // FIXED: Single test case handling using test case ID mapping
-            if (executionResults.length === 1 && elements.textArea) {
-                const singleResult = executionResults[0];
-                const singleExecution = `=== EXECUTION RESULTS ===
-Test Case: ${singleResult.test_case_name}
-Script: ${singleResult.script_name}
-Connected Host: ${result.connected_host}
-Execution Status: ${singleResult.success ? 'SUCCESS' : 'FAILED'}
-
-=== EXECUTION OUTPUT ===
-STDOUT:
-${singleResult.stdout}
-
-STDERR:
-${singleResult.stderr}
-
-=== EXECUTION COMPLETED ===
-✅ Test Case Execution Completed`;
-
-                elements.textArea.value = singleExecution;
-                updateCharCount();
-                autoResizeTextarea();
-            }
-
-            // Final button states for SUCCESS
-            const generateBtn = document.getElementById('generateBtn');
-            const reviewBtn = document.getElementById('reviewBtn');
-
-            executeBtn.disabled = true;
-            executeBtn.classList.remove('btn-loading');
-            executeBtn.textContent = `Executed ${selectedCount} Test${selectedCount > 1 ? 's' : ''} ✓`;
-            executeBtn.style.opacity = '0.6';
-            executeBtn.style.cursor = 'not-allowed';
-
-            if (generateBtn) {
-                generateBtn.disabled = true;
-                generateBtn.style.opacity = '0.6';
-            }
-
-            if (reviewBtn) {
-                reviewBtn.disabled = true;
-                reviewBtn.style.opacity = '0.6';
-            }
-
-            // Hide checkboxes after execution (only for multiple tests)
-            if (generatedScripts.length > 1) {
-                hideExecutionCheckboxes();
-            }
-
-            showToast(`Successfully executed ${selectedCount} test${selectedCount > 1 ? 's' : ''} out of ${totalCount} total!`, 'success');
-            hideSaveButtons();
-
-        } else {
-            // Error handling - reset status indicators on failure
-            generatedScripts.forEach((script, index) => {
-                const testHeader = document.querySelector(`#multiTestAreas .test-area-group:nth-child(${index + 2}) .test-area-header`);
-                if (testHeader) {
-                    const statusDiv = testHeader.querySelector('.execution-status');
-                    if (statusDiv) {
-                        statusDiv.style.background = '#ef4444';
-                        statusDiv.textContent = 'Execution Failed';
-                    }
-                }
-            });
-
-            console.error('❌ Execute failed:', result.message);
-            stopProgressPolling();
-            hideProgress();
-
-            executeBtn.disabled = false;
-            executeBtn.classList.remove('btn-loading');
-            updateExecuteButtonState();
-
-            if (result.message.includes('Raspberry Pi') ||
-                result.message.includes('connection') ||
-                result.message.includes('connect')) {
-                showErrorModal(
-                    'Test Execution Failed',
-                    result.message,
-                    'Unable to establish connection with the remote test infrastructure. Please verify that the Test devices are online and accessible from your network.'
-                );
-            } else {
-                showToast(result.message, 'error');
-            }
-        }
-
-    } catch (error) {
-        // Error handling - reset status indicators on error
-        generatedScripts.forEach((script, index) => {
-            const testHeader = document.querySelector(`#multiTestAreas .test-area-group:nth-child(${index + 2}) .test-area-header`);
-            if (testHeader) {
-                const statusDiv = testHeader.querySelector('.execution-status');
-                if (statusDiv) {
-                    statusDiv.style.background = '#ef4444';
-                    statusDiv.textContent = 'Connection Error';
-                }
-            }
-        });
-
-        console.error('❌ Execution error:', error);
-        stopProgressPolling();
-        hideProgress();
-
-        executeBtn.disabled = false;
-        executeBtn.classList.remove('btn-loading');
-        updateExecuteButtonState();
-
-        if (error.message.includes('fetch') ||
-            error.message.includes('network') ||
-            error.message.includes('connection') ||
-            error.message.includes('Failed to fetch')) {
-            showErrorModal(
-                'Network Connection Error',
-                'Failed to communicate with the test server.',
-                `Technical Details: ${error.message}\n\nThis could be due to network connectivity issues or server unavailability.`
-            );
-        } else {
+            // Regular toast for other JavaScript errors
             showToast('Code execution failed: ' + error.message, 'error');
         }
     }
@@ -2761,16 +1946,7 @@ window.openReport = openReport;
 window.updateTestAreaCharCount = updateTestAreaCharCount;
 window.autoResizeTestTextarea = autoResizeTestTextarea;
 window.hideToast = hideToast;
-// 6. ADD these functions to global exports at the end of the file
-window.toggleTestSelection = toggleTestSelection;
-window.selectAllTests = selectAllTests;
-window.deselectAllTests = deselectAllTests;
-window.showExecutionCheckboxes = showExecutionCheckboxes;
-window.hideExecutionCheckboxes = hideExecutionCheckboxes;
-// 10. Add these functions to global exports
-window.toggleAllTests = toggleAllTests;
-//window.selectRecommended = selectRecommended;
-window.updateMasterCheckbox = updateMasterCheckbox;
+
 // ================================================================================================
 // INITIALIZATION COMPLETE
 // ================================================================================================

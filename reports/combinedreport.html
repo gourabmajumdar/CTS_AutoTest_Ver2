@@ -36,17 +36,18 @@
     </div>
 
     <h1>Multi-Test Code Quality Analysis Report</h1>
-    <p class="timestamp">Generated on: 2025-06-15 20:11:25</p>
-    <p><strong>Total Test Cases Analyzed:</strong> 2</p>
+    <p class="timestamp">Generated on: 2025-06-16 15:29:53</p>
+    <p><strong>Total Test Cases Analyzed:</strong> 3</p>
 
     <div id="summary" class="summary">
         <h2>Executive Summary</h2>
         <pre>CODE REVIEW SUMMARY
 ====================
-Generated at: 2025-06-15 20:11:25
-Files analyzed: 2
+Generated at: 2025-06-16 15:29:53
+Files analyzed: 3
   - generated-scripts/check_the_router_mode_of_the_device.py
   - generated-scripts/check_the_cable_modem_ip_address_of_the_device.py
+  - generated-scripts/check_the_ssid_name_of_the_device.py
 
 BLACK - CODE FORMATTING: ✅
   Return Code: 0
@@ -60,9 +61,9 @@ BANDIT - SECURITY ANALYSIS: ⚠️
   Return Code: 1
   Status: Issues Found
 
-PYLINT - STATIC CODE ANALYSIS: ✅
-  Return Code: 0
-  Status: Success
+PYLINT - STATIC CODE ANALYSIS: ❌
+  Return Code: 22
+  Status: Issues Found
 
 </pre>
     </div>
@@ -72,6 +73,7 @@ PYLINT - STATIC CODE ANALYSIS: ✅
         <ul>
             <li><a href="#test-case-1">Check the Router Mode of the Device (check_the_router_mode_of_the_device.py)</a></li>
             <li><a href="#test-case-2">Check the Cable Modem IP address of the Device (check_the_cable_modem_ip_address_of_the_device.py)</a></li>
+            <li><a href="#test-case-3">Check the SSID name of the Device (check_the_ssid_name_of_the_device.py)</a></li>
         </ul>
     </div>
 
@@ -307,6 +309,177 @@ STDERR:
         <div class="tool-section pylint">
             <h4>Pylint - Static Code Analysis</h4>
             <p><em>Code quality and potential bugs</em></p>
+            <div class="has-issues"><strong>Status:</strong> Issues Found (Return Code: 22)</div>
+            <pre>************* Module check_the_cable_modem_ip_address_of_the_device
+generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:51: [C0304(missing-final-newline), ] Final newline missing
+generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:14: [W0718(broad-exception-caught), get_cm_ip] Catching too general exception Exception
+generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:13: [E0602(undefined-variable), get_cm_ip] Undefined variable 'output'
+generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:4: [W0611(unused-import), ] Unused import subprocess
+
+------------------------------------------------------------------
+Your code has been rated at 7.65/10 (previous run: 9.14/10, -1.50)
+
+</pre>
+        </div>
+
+        <div class="tool-section black">
+            <h4>Black - Code Formatting</h4>
+            <p><em>Code formatting analysis</em></p>
+            <p class="no-issues">✅ No issues found for this script.</p>
+        </div>
+
+        <div class="tool-section bandit">
+            <h4>Bandit - Security Analysis</h4>
+            <p><em>Security vulnerability scanning</em></p>
+            <div class="has-issues"><strong>Status:</strong> Issues Found (Return Code: 1)</div>
+            <div>
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+    Bandit Report
+</title>
+
+<style>
+
+html * {
+    font-family: "Arial", sans-serif;
+}
+
+pre {
+    font-family: "Monaco", monospace;
+}
+
+.bordered-box {
+    border: 1px solid black;
+    padding-top:.5em;
+    padding-bottom:.5em;
+    padding-left:1em;
+}
+
+.metrics-box {
+    font-size: 1.1em;
+    line-height: 130%;
+}
+
+.metrics-title {
+    font-size: 1.5em;
+    font-weight: 500;
+    margin-bottom: .25em;
+}
+
+.issue-description {
+    font-size: 1.3em;
+    font-weight: 500;
+}
+
+.candidate-issues {
+    margin-left: 2em;
+    border-left: solid 1px; LightGray;
+    padding-left: 5%;
+    margin-top: .2em;
+    margin-bottom: .2em;
+}
+
+.issue-block {
+    border: 1px solid LightGray;
+    padding-left: .5em;
+    padding-top: .5em;
+    padding-bottom: .5em;
+    margin-bottom: .5em;
+}
+
+.issue-sev-high {
+    background-color: Pink;
+}
+
+.issue-sev-medium {
+    background-color: NavajoWhite;
+}
+
+.issue-sev-low {
+    background-color: LightCyan;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="metrics">
+    <div class="metrics-box bordered-box">
+        <div class="metrics-title">
+            Metrics:<br>
+        </div>
+        Total lines of code: <span id="loc">36</span><br>
+        Total lines skipped (#nosec): <span id="nosec">0</span>
+    </div>
+</div>
+
+
+
+
+<br>
+<div id="results">
+    
+<div id="issue-0">
+<div class="issue-block issue-sev-low">
+    <b>blacklist: </b> Consider possible security implications associated with the subprocess module.<br>
+    <b>Test ID:</b> B404<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href="./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py" target="_blank">./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py</a><br>
+    <b>Line number: </b>4<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess" target="_blank">https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess</a><br>
+
+<div class="code">
+<pre>
+3	
+4	import subprocess
+5	import re
+</pre>
+</div>
+
+
+</div>
+</div>
+
+</div>
+
+</body>
+</html>
+
+STDERR:
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.9.6
+[html]	INFO	HTML output written to file: reports/bandit_output_2.html
+</div>
+        </div>
+    </div>
+
+    <div id="test-case-3" class="test-case">
+        <div class="test-case-header">
+            <h3>Test Case 3: Check the SSID name of the Device</h3>
+            <p><strong>Script File:</strong> check_the_ssid_name_of_the_device.py</p>
+        </div>
+
+        <div class="tool-section flake8">
+            <h4>Flake8 - Style & Lint Checks</h4>
+            <p><em>PEP 8 compliance and style issues</em></p>
+            <div class="has-issues"><strong>Status:</strong> Issues Found (Return Code: 1)</div>
+            <pre>Issues detected for this script (Return Code: 1), but detailed output could not be retrieved.</pre>
+        </div>
+
+        <div class="tool-section pylint">
+            <h4>Pylint - Static Code Analysis</h4>
+            <p><em>Code quality and potential bugs</em></p>
             <p class="no-issues">✅ No issues found for this script.</p>
         </div>
 
@@ -402,7 +575,7 @@ pre {
         <div class="metrics-title">
             Metrics:<br>
         </div>
-        Total lines of code: <span id="loc">40</span><br>
+        Total lines of code: <span id="loc">22</span><br>
         Total lines skipped (#nosec): <span id="nosec">0</span>
     </div>
 </div>
@@ -420,15 +593,15 @@ pre {
     <b>Severity: </b>LOW<br>
     <b>Confidence: </b>HIGH<br>
     <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
-    <b>File: </b><a href="./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py" target="_blank">./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py</a><br>
+    <b>File: </b><a href="./generated-scripts/check_the_ssid_name_of_the_device.py" target="_blank">./generated-scripts/check_the_ssid_name_of_the_device.py</a><br>
     <b>Line number: </b>1<br>
     <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess" target="_blank">https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess</a><br>
 
 <div class="code">
 <pre>
 1	import subprocess
-2	import re
-3	
+2	
+3	def get_ssid_name():
 </pre>
 </div>
 
@@ -443,18 +616,18 @@ pre {
     <b>Severity: </b>LOW<br>
     <b>Confidence: </b>HIGH<br>
     <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
-    <b>File: </b><a href="./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py" target="_blank">./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py</a><br>
-    <b>Line number: </b>6<br>
+    <b>File: </b><a href="./generated-scripts/check_the_ssid_name_of_the_device.py" target="_blank">./generated-scripts/check_the_ssid_name_of_the_device.py</a><br>
+    <b>Line number: </b>5<br>
     <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html" target="_blank">https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html</a><br>
 
 <div class="code">
 <pre>
-5	    try:
-6	        output = subprocess.run(
-7	            [&quot;dmcli&quot;, &quot;eRT&quot;, &quot;getv&quot;, &quot;Device.DeviceInfo.X_COMCAST-COM_CM_IP&quot;],
-8	            capture_output=True, text=True
-9	        )
-10	        return output.stdout.strip()
+4	    try:
+5	        output = subprocess.run(
+6	            [&quot;dmcli&quot;, &quot;eRT&quot;, &quot;getv&quot;, &quot;Device.WiFi.SSID.1.SSID&quot;],
+7	            capture_output=True, text=True
+8	        )
+9	
 </pre>
 </div>
 
@@ -469,18 +642,18 @@ pre {
     <b>Severity: </b>LOW<br>
     <b>Confidence: </b>HIGH<br>
     <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
-    <b>File: </b><a href="./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py" target="_blank">./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py</a><br>
-    <b>Line number: </b>6<br>
+    <b>File: </b><a href="./generated-scripts/check_the_ssid_name_of_the_device.py" target="_blank">./generated-scripts/check_the_ssid_name_of_the_device.py</a><br>
+    <b>Line number: </b>5<br>
     <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html" target="_blank">https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html</a><br>
 
 <div class="code">
 <pre>
-5	    try:
-6	        output = subprocess.run(
-7	            [&quot;dmcli&quot;, &quot;eRT&quot;, &quot;getv&quot;, &quot;Device.DeviceInfo.X_COMCAST-COM_CM_IP&quot;],
-8	            capture_output=True, text=True
-9	        )
-10	        return output.stdout.strip()
+4	    try:
+5	        output = subprocess.run(
+6	            [&quot;dmcli&quot;, &quot;eRT&quot;, &quot;getv&quot;, &quot;Device.WiFi.SSID.1.SSID&quot;],
+7	            capture_output=True, text=True
+8	        )
+9	
 </pre>
 </div>
 
@@ -499,7 +672,7 @@ STDERR:
 [main]	INFO	cli include tests: None
 [main]	INFO	cli exclude tests: None
 [main]	INFO	running on Python 3.9.6
-[html]	INFO	HTML output written to file: reports/bandit_output_2.html
+[html]	INFO	HTML output written to file: reports/bandit_output_3.html
 </div>
         </div>
     </div>
@@ -514,6 +687,9 @@ STDERR:
         <pre>
 
 === generated-scripts/check_the_cable_modem_ip_address_of_the_device.py ===
+
+
+=== generated-scripts/check_the_ssid_name_of_the_device.py ===
 </pre>
     </div>
 
@@ -532,20 +708,32 @@ Your code has been rated at 8.86/10 (previous run: 8.86/10, +0.00)
 
 === generated-scripts/check_the_cable_modem_ip_address_of_the_device.py ===
 ************* Module check_the_cable_modem_ip_address_of_the_device
-generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:49: [C0305(trailing-newlines), ] Trailing newlines
-generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:11: [W0718(broad-exception-caught), get_cm_ip] Catching too general exception Exception
-generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:6: [W1510(subprocess-run-check), get_cm_ip] 'subprocess.run' used without explicitly defining the value for 'check'.
+generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:51: [C0304(missing-final-newline), ] Final newline missing
+generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:14: [W0718(broad-exception-caught), get_cm_ip] Catching too general exception Exception
+generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:13: [E0602(undefined-variable), get_cm_ip] Undefined variable 'output'
+generated-scripts/check_the_cable_modem_ip_address_of_the_device.py:4: [W0611(unused-import), ] Unused import subprocess
 
 ------------------------------------------------------------------
-Your code has been rated at 9.14/10 (previous run: 9.14/10, +0.00)
+Your code has been rated at 7.65/10 (previous run: 9.14/10, -1.50)
+
+
+
+=== generated-scripts/check_the_ssid_name_of_the_device.py ===
+************* Module check_the_ssid_name_of_the_device
+generated-scripts/check_the_ssid_name_of_the_device.py:29: [C0305(trailing-newlines), ] Trailing newlines
+generated-scripts/check_the_ssid_name_of_the_device.py:12: [W0718(broad-exception-caught), get_ssid_name] Catching too general exception Exception
+generated-scripts/check_the_ssid_name_of_the_device.py:5: [W1510(subprocess-run-check), get_ssid_name] 'subprocess.run' used without explicitly defining the value for 'check'.
+
+------------------------------------------------------------------
+Your code has been rated at 8.33/10 (previous run: 8.33/10, +0.00)
 
 </pre>
     </div>
 
     <div class="tool-section black">
         <h3>Black - Complete Output</h3>
-        <pre>--- generated-scripts/check_the_router_mode_of_the_device.py	2025-06-16 00:11:04.307832+00:00
-+++ generated-scripts/check_the_router_mode_of_the_device.py	2025-06-16 00:11:23.112675+00:00
+        <pre>--- generated-scripts/check_the_router_mode_of_the_device.py	2025-06-16 19:28:29.331601+00:00
++++ generated-scripts/check_the_router_mode_of_the_device.py	2025-06-16 19:29:49.995224+00:00
 @@ -1,46 +1,50 @@
  import subprocess
 +
@@ -616,20 +804,23 @@ All done! ✨ 🍰 ✨
 
 
 === generated-scripts/check_the_cable_modem_ip_address_of_the_device.py ===
---- generated-scripts/check_the_cable_modem_ip_address_of_the_device.py	2025-06-16 00:11:14.477316+00:00
-+++ generated-scripts/check_the_cable_modem_ip_address_of_the_device.py	2025-06-16 00:11:24.472476+00:00
-@@ -1,33 +1,36 @@
+--- generated-scripts/check_the_cable_modem_ip_address_of_the_device.py	2025-06-16 19:29:18.738907+00:00
++++ generated-scripts/check_the_cable_modem_ip_address_of_the_device.py	2025-06-16 19:29:51.264666+00:00
+@@ -2,35 +2,39 @@
+ # Generated on: 2025-06-16 15:28:52
+ 
  import subprocess
  import re
-+
  
++
  def get_cm_ip():
      try:
-         output = subprocess.run(
--            ["dmcli", "eRT", "getv", "Device.DeviceInfo.X_COMCAST-COM_CM_IP"],
--            capture_output=True, text=True
-+            ["dmcli", "eRT", "getv", "Device.DeviceInfo.X_COMCAST-COM_CM_IP"], capture_output=True, text=True
-         )
+-        #output = subprocess.run(
++        # output = subprocess.run(
+         #    ["dmcli", "eRT", "getv", "Device.DeviceInfo.X_COMCAST-COM_CM_IP"],
+         #    capture_output=True, text=True
+-        #)
++        # )
          return output.stdout.strip()
      except Exception as e:
          print(f"Error running dmcli: {e}")
@@ -661,9 +852,55 @@ All done! ✨ 🍰 ✨
      print("Checking the Cable Modem IP Address of the Device...")
  
      raw_output = get_cm_ip()
-@@ -42,8 +45,8 @@
+@@ -45,7 +49,8 @@
              print(raw_output)
              print("Test Result: FAILED")
+     else:
+         print("Test Result: FAILED")
+ 
+-if __name__ == '__main__':
+-    main()
+\ No newline at end of file
++
++if __name__ == "__main__":
++    main()
+
+STDERR:
+would reformat generated-scripts/check_the_cable_modem_ip_address_of_the_device.py
+
+All done! ✨ 🍰 ✨
+1 file would be reformatted.
+
+
+=== generated-scripts/check_the_ssid_name_of_the_device.py ===
+--- generated-scripts/check_the_ssid_name_of_the_device.py	2025-06-16 19:28:49.736801+00:00
++++ generated-scripts/check_the_ssid_name_of_the_device.py	2025-06-16 19:29:52.479987+00:00
+@@ -1,19 +1,18 @@
+ import subprocess
++
+ 
+ def get_ssid_name():
+     try:
+-        output = subprocess.run(
+-            ["dmcli", "eRT", "getv", "Device.WiFi.SSID.1.SSID"],
+-            capture_output=True, text=True
+-        )
++        output = subprocess.run(["dmcli", "eRT", "getv", "Device.WiFi.SSID.1.SSID"], capture_output=True, text=True)
+ 
+         return output.stdout.strip()
+ 
+     except Exception as e:
+         print(f"Error running dmcli: {e}")
+         return None
++
+ 
+ def main():
+     print("Checking the SSID Name of the Device...")
+ 
+     ssid_info = get_ssid_name()
+@@ -22,8 +21,8 @@
+         print(ssid_info)
+         print("Test Result: COMPLETED")
      else:
          print("Test Result: FAILED")
  
@@ -674,7 +911,7 @@ All done! ✨ 🍰 ✨
 -
 
 STDERR:
-would reformat generated-scripts/check_the_cable_modem_ip_address_of_the_device.py
+would reformat generated-scripts/check_the_ssid_name_of_the_device.py
 
 All done! ✨ 🍰 ✨
 1 file would be reformatted.
@@ -948,7 +1185,7 @@ pre {
         <div class="metrics-title">
             Metrics:<br>
         </div>
-        Total lines of code: <span id="loc">40</span><br>
+        Total lines of code: <span id="loc">36</span><br>
         Total lines skipped (#nosec): <span id="nosec">0</span>
     </div>
 </div>
@@ -967,66 +1204,14 @@ pre {
     <b>Confidence: </b>HIGH<br>
     <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
     <b>File: </b><a href="./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py" target="_blank">./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py</a><br>
-    <b>Line number: </b>1<br>
+    <b>Line number: </b>4<br>
     <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess" target="_blank">https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess</a><br>
 
 <div class="code">
 <pre>
-1	import subprocess
-2	import re
 3	
-</pre>
-</div>
-
-
-</div>
-</div>
-
-<div id="issue-1">
-<div class="issue-block issue-sev-low">
-    <b>start_process_with_partial_path: </b> Starting a process with a partial executable path<br>
-    <b>Test ID:</b> B607<br>
-    <b>Severity: </b>LOW<br>
-    <b>Confidence: </b>HIGH<br>
-    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
-    <b>File: </b><a href="./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py" target="_blank">./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py</a><br>
-    <b>Line number: </b>6<br>
-    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html" target="_blank">https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html</a><br>
-
-<div class="code">
-<pre>
-5	    try:
-6	        output = subprocess.run(
-7	            [&quot;dmcli&quot;, &quot;eRT&quot;, &quot;getv&quot;, &quot;Device.DeviceInfo.X_COMCAST-COM_CM_IP&quot;],
-8	            capture_output=True, text=True
-9	        )
-10	        return output.stdout.strip()
-</pre>
-</div>
-
-
-</div>
-</div>
-
-<div id="issue-2">
-<div class="issue-block issue-sev-low">
-    <b>subprocess_without_shell_equals_true: </b> subprocess call - check for execution of untrusted input.<br>
-    <b>Test ID:</b> B603<br>
-    <b>Severity: </b>LOW<br>
-    <b>Confidence: </b>HIGH<br>
-    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
-    <b>File: </b><a href="./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py" target="_blank">./generated-scripts/check_the_cable_modem_ip_address_of_the_device.py</a><br>
-    <b>Line number: </b>6<br>
-    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html" target="_blank">https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html</a><br>
-
-<div class="code">
-<pre>
-5	    try:
-6	        output = subprocess.run(
-7	            [&quot;dmcli&quot;, &quot;eRT&quot;, &quot;getv&quot;, &quot;Device.DeviceInfo.X_COMCAST-COM_CM_IP&quot;],
-8	            capture_output=True, text=True
-9	        )
-10	        return output.stdout.strip()
+4	import subprocess
+5	import re
 </pre>
 </div>
 
@@ -1045,6 +1230,189 @@ pre {
 [main]	INFO	cli exclude tests: None
 [main]	INFO	running on Python 3.9.6
 [html]	INFO	HTML output written to file: reports/bandit_output_2.html
+ -->
+
+
+<!-- === generated-scripts/check_the_ssid_name_of_the_device.py === -->
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+    Bandit Report
+</title>
+
+<style>
+
+html * {
+    font-family: "Arial", sans-serif;
+}
+
+pre {
+    font-family: "Monaco", monospace;
+}
+
+.bordered-box {
+    border: 1px solid black;
+    padding-top:.5em;
+    padding-bottom:.5em;
+    padding-left:1em;
+}
+
+.metrics-box {
+    font-size: 1.1em;
+    line-height: 130%;
+}
+
+.metrics-title {
+    font-size: 1.5em;
+    font-weight: 500;
+    margin-bottom: .25em;
+}
+
+.issue-description {
+    font-size: 1.3em;
+    font-weight: 500;
+}
+
+.candidate-issues {
+    margin-left: 2em;
+    border-left: solid 1px; LightGray;
+    padding-left: 5%;
+    margin-top: .2em;
+    margin-bottom: .2em;
+}
+
+.issue-block {
+    border: 1px solid LightGray;
+    padding-left: .5em;
+    padding-top: .5em;
+    padding-bottom: .5em;
+    margin-bottom: .5em;
+}
+
+.issue-sev-high {
+    background-color: Pink;
+}
+
+.issue-sev-medium {
+    background-color: NavajoWhite;
+}
+
+.issue-sev-low {
+    background-color: LightCyan;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="metrics">
+    <div class="metrics-box bordered-box">
+        <div class="metrics-title">
+            Metrics:<br>
+        </div>
+        Total lines of code: <span id="loc">22</span><br>
+        Total lines skipped (#nosec): <span id="nosec">0</span>
+    </div>
+</div>
+
+
+
+
+<br>
+<div id="results">
+    
+<div id="issue-0">
+<div class="issue-block issue-sev-low">
+    <b>blacklist: </b> Consider possible security implications associated with the subprocess module.<br>
+    <b>Test ID:</b> B404<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href="./generated-scripts/check_the_ssid_name_of_the_device.py" target="_blank">./generated-scripts/check_the_ssid_name_of_the_device.py</a><br>
+    <b>Line number: </b>1<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess" target="_blank">https://bandit.readthedocs.io/en/1.8.3/blacklists/blacklist_imports.html#b404-import-subprocess</a><br>
+
+<div class="code">
+<pre>
+1	import subprocess
+2	
+3	def get_ssid_name():
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-1">
+<div class="issue-block issue-sev-low">
+    <b>start_process_with_partial_path: </b> Starting a process with a partial executable path<br>
+    <b>Test ID:</b> B607<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href="./generated-scripts/check_the_ssid_name_of_the_device.py" target="_blank">./generated-scripts/check_the_ssid_name_of_the_device.py</a><br>
+    <b>Line number: </b>5<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html" target="_blank">https://bandit.readthedocs.io/en/1.8.3/plugins/b607_start_process_with_partial_path.html</a><br>
+
+<div class="code">
+<pre>
+4	    try:
+5	        output = subprocess.run(
+6	            [&quot;dmcli&quot;, &quot;eRT&quot;, &quot;getv&quot;, &quot;Device.WiFi.SSID.1.SSID&quot;],
+7	            capture_output=True, text=True
+8	        )
+9	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+<div id="issue-2">
+<div class="issue-block issue-sev-low">
+    <b>subprocess_without_shell_equals_true: </b> subprocess call - check for execution of untrusted input.<br>
+    <b>Test ID:</b> B603<br>
+    <b>Severity: </b>LOW<br>
+    <b>Confidence: </b>HIGH<br>
+    <b>CWE: </b><a href="https://cwe.mitre.org/data/definitions/78.html" target="_blank">CWE-78</a><br>
+    <b>File: </b><a href="./generated-scripts/check_the_ssid_name_of_the_device.py" target="_blank">./generated-scripts/check_the_ssid_name_of_the_device.py</a><br>
+    <b>Line number: </b>5<br>
+    <b>More info: </b><a href="https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html" target="_blank">https://bandit.readthedocs.io/en/1.8.3/plugins/b603_subprocess_without_shell_equals_true.html</a><br>
+
+<div class="code">
+<pre>
+4	    try:
+5	        output = subprocess.run(
+6	            [&quot;dmcli&quot;, &quot;eRT&quot;, &quot;getv&quot;, &quot;Device.WiFi.SSID.1.SSID&quot;],
+7	            capture_output=True, text=True
+8	        )
+9	
+</pre>
+</div>
+
+
+</div>
+</div>
+
+</div>
+
+</body>
+</html>
+
+<!-- STDERR: [main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.9.6
+[html]	INFO	HTML output written to file: reports/bandit_output_3.html
  -->
 </div>
     </div>

@@ -677,7 +677,7 @@ def remove_ansi_codes(text):
 
 @app.route('/execute', methods=['POST'])
 def execute_code():
-    """Execute selected test scripts on remote RPI via SSH with real progress tracking"""
+    """Execute all generated test scripts on remote RPI via SSH with real progress tracking"""
     global generated_scripts_info
 
     # Clean up progress file if exists from previous Run
@@ -690,46 +690,16 @@ def execute_code():
 
     try:
         data = request.get_json()
-
-        # NEW: Handle selective test execution
-        selected_test_ids = data.get('selected_test_ids', None)
-
-        # If no specific tests selected, execute all (backward compatibility)
-        if selected_test_ids is None:
-            print("[INFO] No specific tests selected - executing all tests")
-            scripts_to_execute = generated_scripts_info
-        else:
-            print(f"[INFO] Selective execution requested for test IDs: {selected_test_ids}")
-            # Filter scripts based on selected IDs
-            scripts_to_execute = [
-                script for script in generated_scripts_info
-                if script['id'] in selected_test_ids
-            ]
-
-            if not scripts_to_execute:
-                return jsonify({
-                    'success': False,
-                    'message': 'No valid test scripts found for the selected test cases.'
-                })
-
-            print(
-                f"[INFO] Found {len(scripts_to_execute)} scripts to execute out of {len(generated_scripts_info)} total")
+        test_case_id = data.get('test_case_id', None)
 
         # Clear previous progress and initialize
         clear_progress('execute')
-
-        # Update progress message based on selection
-        if selected_test_ids and len(scripts_to_execute) != len(generated_scripts_info):
-            progress_msg = f'Preparing selective execution for {len(scripts_to_execute)} test(s)'
-        else:
-            progress_msg = 'Preparing Python execution environment'
-
-        update_progress('execute', 0, 'Starting', progress_msg)
+        update_progress('execute', 0, 'Starting', 'Preparing Python execution environment')
 
         # Step 1: Preparation (20%)
         update_progress('execute', 20, 'Processing', 'Connecting to test infrastructure')
 
-        # RPI connection details (unchanged)
+        # RPI connection details
         rpi_list = [
             {"host": "71.185.253.158", "user": "root", "pass": ""},
             {"host": "65.78.96.246", "user": "root", "pass": ""}
@@ -742,7 +712,7 @@ def execute_code():
         connected = False
         connected_host = None
 
-        # Try to connect to any available RPI (unchanged)
+        # Try to connect to any available RPI
         for attempt in range(MAX_RETRIES):
             print(f"[INFO] Connection attempt {attempt + 1}")
             for rpi in rpi_list:
@@ -764,42 +734,41 @@ def execute_code():
             return jsonify({'success': False, 'message': 'Failed to connect to the Remote Test Device.'})
 
         # Step 2: Connection established (40%)
-        if selected_test_ids:
-            status_msg = f'Running {len(scripts_to_execute)} selected Python test case(s)'
-        else:
-            status_msg = 'Running reviewed Python test cases'
-
-        update_progress('execute', 40, 'Processing', status_msg)
+        update_progress('execute', 40, 'Processing', 'Running reviewed Python test cases')
 
         execution_results = []
 
-        # Step 3: Executing scripts (60%)
-        update_progress('execute', 60, 'Processing', 'Collecting test results')
-
-        # Execute each selected script
-        total_scripts = len(scripts_to_execute)
-        print(f"[INFO] Executing {total_scripts} selected scripts")
-
-        for i, script_info in enumerate(scripts_to_execute):
-            if os.path.isfile(script_info['file_path']):
-                print(f"[INFO] Executing script {i + 1}/{total_scripts}: {script_info['script_name']}")
+        if test_case_id is not None:
+            # Execute specific test case
+            if test_case_id <= len(generated_scripts_info):
+                script_info = generated_scripts_info[test_case_id - 1]
                 result = execute_single_script(ssh, script_info)
                 execution_results.append(result)
-
-                # Update progress based on script execution
-                progress = 60 + (i + 1) * 20 // total_scripts
-                update_progress('execute', progress, 'Processing', f'Executed {i + 1}/{total_scripts} selected scripts')
             else:
-                print(f"[WARNING] Script file not found: {script_info['file_path']}")
-                # Add a failed result for missing script
-                execution_results.append({
-                    'test_case_id': script_info['id'],
-                    'script_name': script_info['script_name'],
-                    'test_case_name': script_info['test_case_name'],
-                    'stdout': '',
-                    'stderr': f'Script file not found: {script_info["file_path"]}',
-                    'success': False
-                })
+                ssh.close()
+                update_progress('execute', 0, 'Error', f'Test case {test_case_id} not found', True)
+                return jsonify({'success': False, 'message': f'Test case {test_case_id} not found.'})
+        else:
+            # Execute all test cases
+            script_folder = app.config['GENERATED_SCRIPTS_FOLDER']
+            if not os.path.isdir(script_folder):
+                ssh.close()
+                update_progress('execute', 0, 'Error', 'Generated scripts folder does not exist', True)
+                return jsonify({'success': False, 'message': 'Generated scripts folder does not exist.'})
+
+            # Step 3: Executing scripts (60%)
+            update_progress('execute', 60, 'Processing', 'Collecting test results')
+
+            # Execute each generated script
+            total_scripts = len(generated_scripts_info)
+            for i, script_info in enumerate(generated_scripts_info):
+                if os.path.isfile(script_info['file_path']):
+                    result = execute_single_script(ssh, script_info)
+                    execution_results.append(result)
+
+                    # Update progress based on script execution
+                    progress = 60 + (i + 1) * 20 // total_scripts
+                    update_progress('execute', progress, 'Processing', f'Executed {i + 1}/{total_scripts} scripts')
 
         # Step 4: Collecting results (80%)
         update_progress('execute', 80, 'Processing', 'Generating execution output')
@@ -810,65 +779,17 @@ def execute_code():
         # Step 5: Complete (100%)
         update_progress('execute', 100, 'Completed', 'Execution completed successfully!', True)
 
-        # Enhanced response with selection information
-        success_message = f'Successfully executed {len(execution_results)} test script(s)'
-        if selected_test_ids and len(scripts_to_execute) != len(generated_scripts_info):
-            success_message += f' (selected {len(scripts_to_execute)} out of {len(generated_scripts_info)} total)'
-
         return jsonify({
             'success': True,
             'connected_host': connected_host,
             'execution_results': execution_results,
             'total_executed': len(execution_results),
-            'total_available': len(generated_scripts_info),
-            'selected_test_ids': selected_test_ids or [script['id'] for script in generated_scripts_info],
-            'message': success_message
+            'message': f'Successfully executed {len(execution_results)} test script(s)'
         })
 
     except Exception as e:
         update_progress('execute', 0, 'Error', f'Execution failed: {str(e)}', True)
         return jsonify({'success': False, 'message': f'Execution error: {str(e)}'})
-
-
-# ===============================================================================
-# OPTIONAL: ADD THESE HELPER FUNCTIONS (for debugging - you can add these too)
-# ===============================================================================
-@app.route('/test-selection-status', methods=['GET'])
-def get_test_selection_status():
-    """Get current test selection status for debugging"""
-    try:
-        return jsonify({
-            'success': True,
-            'total_scripts': len(generated_scripts_info),
-            'available_test_ids': [script['id'] for script in generated_scripts_info],
-            'script_details': [
-                {
-                    'id': script['id'],
-                    'name': script['test_case_name'],
-                    'script_name': script['script_name'],
-                    'file_exists': os.path.isfile(script['file_path'])
-                }
-                for script in generated_scripts_info
-            ]
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
-
-
-def log_execution_selection(selected_test_ids, available_scripts):
-    """Log execution selection details for debugging"""
-    print(f"[SELECTION] Total available scripts: {len(available_scripts)}")
-    print(f"[SELECTION] Available test IDs: {[script['id'] for script in available_scripts]}")
-
-    if selected_test_ids:
-        print(f"[SELECTION] Selected test IDs: {selected_test_ids}")
-        selected_scripts = [script for script in available_scripts if script['id'] in selected_test_ids]
-        print(f"[SELECTION] Selected scripts: {[script['script_name'] for script in selected_scripts]}")
-        skipped_scripts = [script for script in available_scripts if script['id'] not in selected_test_ids]
-        if skipped_scripts:
-            print(f"[SELECTION] Skipped scripts: {[script['script_name'] for script in skipped_scripts]}")
-    else:
-        print("[SELECTION] No specific selection - executing all scripts")
 
 
 def execute_single_script(ssh, script_info):
@@ -885,21 +806,11 @@ def execute_single_script(ssh, script_info):
         command = f"echo '{escaped_script}' > {remote_path} && chmod +x {remote_path}"
         ssh.exec_command(command)
 
-        # FIXED: Execute the script with proper timing
+        # Execute the script
         print(f"[INFO] Executing {script_info['script_name']}")
-        stdin, stdout, stderr = ssh.exec_command(f"python3 -u {remote_path}")
-
-        # CRITICAL FIX: Wait for completion BEFORE reading outputs
-        exit_status = stdout.channel.recv_exit_status()
-        print(f"[DEBUG] Command completed with exit status: {exit_status}")
-
-        # NOW read the outputs after command completion
+        stdin, stdout, stderr = ssh.exec_command(f"python3 {remote_path}")
         execution_output = stdout.read().decode()
         error_output = stderr.read().decode()
-
-        # Debug logging
-        print(f"[DEBUG] STDOUT length: {len(execution_output)}")
-        print(f"[DEBUG] STDERR length: {len(error_output)}")
 
         return {
             'test_case_id': script_info['id'],
@@ -919,6 +830,7 @@ def execute_single_script(ssh, script_info):
             'stderr': f'Execution error: {str(e)}',
             'success': False
         }
+
 @app.route('/review', methods=['POST'])
 def review_code():
     """Review Python code quality for individual or all test cases with real progress tracking"""
