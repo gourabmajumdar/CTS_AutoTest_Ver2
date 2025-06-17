@@ -1,5 +1,3 @@
-from time import sleep
-
 import paramiko
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import os
@@ -48,110 +46,6 @@ ALLOWED_EXTENSIONS = {
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-def parse_multiple_test_cases_from_content(content, filename):
-    """Parse a single file that may contain multiple test cases while preserving order"""
-    print(f"[PARSE] Analyzing file: {filename}")
-
-    # Split by "Test Case:" to find individual test cases
-    test_case_sections = re.split(r'Test Case:', content, flags=re.IGNORECASE)
-
-    # Remove the first empty element (content before first "Test Case:")
-    if test_case_sections:
-        test_case_sections = test_case_sections[1:]  # Remove first empty section
-
-    parsed_test_cases = []
-
-    for i, section in enumerate(test_case_sections):
-        # Add back "Test Case:" prefix and clean up
-        clean_section = f"Test Case:{section}".strip()
-
-        if len(clean_section) > 50:  # Only process substantial content
-            # Extract test case name from first line
-            first_line = clean_section.split('\n')[0]
-            test_case_name = re.sub(r'^Test Case:\s*', '', first_line, flags=re.IGNORECASE).strip()
-
-            # Limit test case name length
-            if len(test_case_name) > 100:
-                test_case_name = test_case_name[:100] + "..."
-
-            parsed_test_cases.append({
-                'content': clean_section,
-                'test_case_name': test_case_name,
-                'section_index': i + 1  # Position within this file
-            })
-
-    print(f"[PARSE] Found {len(parsed_test_cases)} test cases in {filename}")
-    return parsed_test_cases
-
-'''
-def create_individual_files_for_multi_case(parsed_test_cases, original_filename, timestamp_prefix):
-    """Create individual files for each test case found in a multi-case file"""
-    created_files = []
-
-    for i, test_case in enumerate(parsed_test_cases):
-        # Create filename: timestamp_originalname_part1.txt, timestamp_originalname_part2.txt, etc.
-        base_name = original_filename.replace('.txt', '').replace('.rtf', '')
-        new_filename = f"{timestamp_prefix}_{base_name}_part{i + 1}.txt"
-        new_filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-
-        # Write individual test case to file
-        with open(new_filepath, 'w', encoding='utf-8') as f:
-            f.write(test_case['content'])
-
-        created_files.append({
-            'filename': new_filename,
-            'test_case_name': test_case['test_case_name'],
-            'section_index': test_case['section_index'],
-            'original_file': original_filename
-        })
-
-        print(f"[CREATE] Created individual file: {new_filename}")
-
-    return created_files
-'''
-
-
-def create_individual_files_for_multi_case(parsed_test_cases, original_filename, timestamp_prefix):
-    """Create individual files for each test case found in a multi-case file with sequential timestamps"""
-    created_files = []
-
-    # Extract the base timestamp components from the original file
-    # timestamp_prefix format: "20250616_210942948"
-    base_date = timestamp_prefix.split('_')[0]  # "20250616"
-    base_time_part = timestamp_prefix.split('_')[1]  # "210942948"
-
-    # Convert base time to integer for incrementing
-    base_time_int = int(base_time_part)
-
-    for i, test_case in enumerate(parsed_test_cases):
-        # Create incremental timestamp for each individual file
-        # Add seconds to ensure proper ordering: +1, +2, +3, +4 seconds
-        incremented_time = base_time_int + (i + 1)
-
-        # Create new timestamp prefix for this individual file
-        individual_timestamp_prefix = f"{base_date}_{incremented_time:09d}"
-
-        # Create filename with individual timestamp
-        base_name = original_filename.replace('.txt', '').replace('.rtf', '')
-        new_filename = f"{individual_timestamp_prefix}_{base_name}_part{i + 1}.txt"
-        new_filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-
-        # Write individual test case to file
-        with open(new_filepath, 'w', encoding='utf-8') as f:
-            f.write(test_case['content'])
-
-        created_files.append({
-            'filename': new_filename,
-            'test_case_name': test_case['test_case_name'],
-            'section_index': test_case['section_index'],
-            'original_file': original_filename,
-            'individual_timestamp': individual_timestamp_prefix  # Track individual timestamp
-        })
-
-        print(f"[CREATE] Created individual file: {new_filename} (timestamp: {individual_timestamp_prefix})")
-
-    return created_files
 # ================================================================================================
 # PROGRESS FILES CLEANUP FUNCTIONS
 # ================================================================================================
@@ -170,19 +64,6 @@ def signal_handler(sig, frame):
     """Handle Ctrl+C"""
     print("\n[SHUTDOWN] Ctrl+C pressed - cleaning up...")
     progress_cleanup()
-
-    # Clean up test_case folder
-    try:
-        test_case_folder = app.config['UPLOAD_FOLDER']
-        if os.path.exists(test_case_folder):
-            for filename in os.listdir(test_case_folder):
-                file_path = os.path.join(test_case_folder, filename)
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
-            print("[CLEANUP] Cleaned test_case folder")
-    except Exception as e:
-        print(f"[CLEANUP] Error cleaning test_case folder: {e}")
-
     print("[SHUTDOWN] Cleanup complete")
     sys.exit(0)
 
@@ -273,19 +154,7 @@ def upload_files():
     """Handle file uploads"""
     global uploaded_files_global
 
-    # Cleanup any progress JSON files at the start
-    progress_cleanup()
-
     try:
-        # *** SIMPLE CLEANUP: Remove all existing files from test_case folder ***
-        test_case_folder = app.config['UPLOAD_FOLDER']
-        if os.path.exists(test_case_folder):
-            for filename in os.listdir(test_case_folder):
-                file_path = os.path.join(test_case_folder, filename)
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
-            print(f"[CLEANUP] Cleaned test_case folder before ingest")
-
         if 'files' not in request.files:
             return jsonify({'success': False, 'message': 'No files selected'})
 
@@ -337,189 +206,41 @@ def upload_files():
 
 @app.route('/ingest', methods=['POST'])
 def ingest_test():
-    """Process ingested test files and identify individual test cases - supports both single and multiple test case files while preserving upload order"""
+    """Process ingested test files and identify individual test cases"""
     try:
         data = request.get_json()
         files = data.get('files', [])
-        parse_multiple = data.get('parse_multiple', True)  # Enable multi-parsing by default
 
-        print(f"[INGEST] Processing {len(files)} file(s) with parse_multiple={parse_multiple}")
-
+        # Process each uploaded file and identify test cases
         processed_files = []
-        multi_case_files = []
-        single_case_files = []
-        created_individual_files = []  # Track files we create for multi-case scenarios
-        files_to_delete = []  # Track original multi-case files to delete
-
-        # Process files in the exact upload order to maintain sequence
-        for file_index, file_info in enumerate(files):
-            filename = file_info['name']
+        for i, file_info in enumerate(files):
+            # Simulate analyzing file content to determine number of test cases
+            # In reality, you might parse the file content here
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_info['path'])
 
-            print(f"[INGEST] Processing file {file_index + 1}/{len(files)}: {filename}")
+            # For demonstration, assume each file contains 1 test case
+            # You can enhance this to actually parse the file content
+            test_case_name = file_info['name'].replace('.txt', '').replace('.docx', '').replace('.pdf', '')
 
-            try:
-                # Read file content with encoding detection
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-            except UnicodeDecodeError:
-                # Fallback to different encoding if UTF-8 fails
-                try:
-                    with open(file_path, 'r', encoding='latin-1') as f:
-                        content = f.read()
-                except Exception as e:
-                    print(f"[ERROR] Could not read file {filename}: {e}")
-                    continue
-
-            if parse_multiple:
-                # Check if file contains multiple test cases
-                test_case_matches = re.findall(r'Test Case:', content, re.IGNORECASE)
-                test_case_count = len(test_case_matches)
-                print(f"[INGEST] File {filename} contains {test_case_count} test case(s)")
-
-                if test_case_count > 1:
-                    # Multiple test cases in single file - PRESERVE ORDER
-                    print(f"[INGEST] Breaking down multi-case file: {filename}")
-                    parsed_test_cases = parse_multiple_test_cases_from_content(content, filename)
-
-                    if parsed_test_cases:
-                        # Extract timestamp from uploaded file path for consistent naming
-                        timestamp_prefix = file_info['path'].split('_')[0] + '_' + file_info['path'].split('_')[1]
-
-                        # Create individual files - this maintains compatibility with Auto_test_gen.py
-                        individual_files = create_individual_files_for_multi_case(
-                            parsed_test_cases, filename, timestamp_prefix
-                        )
-
-                        created_individual_files.extend(individual_files)
-
-                        multi_case_files.append({
-                            'name': filename,
-                            'test_cases': len(individual_files),
-                            'created_files': [f['filename'] for f in individual_files]
-                        })
-
-                        # Add to processed files for response
-                        for j, individual_file in enumerate(individual_files):
-                            processed_files.append({
-                                'id': len(processed_files) + 1,
-                                'name': individual_file['test_case_name'],
-                                'original_filename': filename,
-                                'created_filename': individual_file['filename'],
-                                'status': 'processed',
-                                'test_cases': f"1 test case (part {individual_file['section_index']} of {len(individual_files)})",
-                                'file_type': 'multi_case_part'
-                            })
-
-                        # *** FIX: Mark original multi-case file for deletion ***
-                        #files_to_delete.append(file_path)
-                        #print(f"[CLEANUP] Marked original multi-case file for deletion: {filename}")
-                        # *** CRITICAL FIX: Delete the original multi-case file immediately ***
-                        try:
-                            os.remove(file_path)
-                            print(f"[CLEANUP] Deleted original multi-case file: {filename}")
-                        except Exception as e:
-                            print(f"[ERROR] Failed to delete original file {file_path}: {e}")
-                    else:
-                        print(f"[WARNING] No valid test cases found in {filename}")
-
-                elif test_case_count == 1:
-                    # Single test case file - no changes needed
-                    print(f"[INGEST] Single test case file: {filename}")
-                    test_case_name = filename.replace('.txt', '').replace('.rtf', '').replace('.docx', '').replace(
-                        '.pdf', '')
-
-                    single_case_files.append({
-                        'name': filename,
-                        'test_cases': 1
-                    })
-
-                    processed_files.append({
-                        'id': len(processed_files) + 1,
-                        'name': test_case_name,
-                        'original_filename': filename,
-                        'status': 'processed',
-                        'test_cases': f"1 test case identified",
-                        'file_path': file_path,
-                        'file_type': 'single_case'
-                    })
-
-                else:
-                    # No "Test Case:" found - treat as single case anyway
-                    print(f"[INGEST] No 'Test Case:' markers found in {filename}, treating as single test case")
-                    test_case_name = filename.replace('.txt', '').replace('.rtf', '').replace('.docx', '').replace(
-                        '.pdf', '')
-
-                    single_case_files.append({
-                        'name': filename,
-                        'test_cases': 1
-                    })
-
-                    processed_files.append({
-                        'id': len(processed_files) + 1,
-                        'name': test_case_name,
-                        'original_filename': filename,
-                        'status': 'processed',
-                        'test_cases': f"1 test case identified",
-                        'file_path': file_path,
-                        'file_type': 'single_case'
-                    })
-
-            else:
-                # Original single-file processing (backward compatibility)
-                test_case_name = filename.replace('.txt', '').replace('.rtf', '').replace('.docx', '').replace('.pdf',
-                                                                                                               '')
-
-                processed_files.append({
-                    'id': len(processed_files) + 1,
-                    'name': test_case_name,
-                    'original_filename': filename,
-                    'status': 'processed',
-                    'test_cases': f"1 test case identified",
-                    'file_path': file_path,
-                    'file_type': 'single_case'
-                })
-
-        # *** NEW: Delete original multi-case files to prevent duplicate processing ***
-        for file_path_to_delete in files_to_delete:
-            try:
-                os.remove(file_path_to_delete)
-                print(f"[CLEANUP] Deleted original multi-case file: {os.path.basename(file_path_to_delete)}")
-            except Exception as e:
-                print(f"[ERROR] Failed to delete original file {file_path_to_delete}: {e}")
-
-        total_test_cases = len(processed_files)
-        print(f"[INGEST] Successfully processed {total_test_cases} test cases from {len(files)} file(s)")
-
-        # Build response message
-        if parse_multiple and (multi_case_files or single_case_files):
-            message_parts = []
-            if multi_case_files:
-                message_parts.append(
-                    f"{len(multi_case_files)} multi-test-case file(s) broken down into individual files")
-            if single_case_files:
-                message_parts.append(f"{len(single_case_files)} single test case file(s)")
-            message = f"Successfully ingested {total_test_cases} test cases from {' and '.join(message_parts)} - order preserved for generation"
-        else:
-            message = f"Successfully ingested {total_test_cases} test case(s) from {len(files)} file(s) - order preserved for generation"
+            processed_files.append({
+                'id': i + 1,
+                'name': test_case_name,
+                'original_filename': file_info['name'],
+                'status': 'processed',
+                'test_cases': f"1 test case identified",
+                'file_path': file_path
+            })
 
         return jsonify({
             'success': True,
             'processed_files': processed_files,
-            'multi_case_files': multi_case_files,
-            'single_case_files': single_case_files,
-            'created_individual_files': created_individual_files,
-            'total_test_cases': total_test_cases,
-            'message': message,
-            'deleted_original_files': len(files_to_delete)  # Added for debugging
+            'total_test_cases': len(processed_files),
+            'message': f'Test ingestion completed successfully. Found {len(processed_files)} test case(s)'
         })
 
     except Exception as e:
-        print(f"[ERROR] Ingestion error: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': f'Ingestion error: {str(e)}'
-        })
+        return jsonify({'success': False, 'message': f'Ingestion error: {str(e)}'})
+
 
 def simulate_progress_during_subprocess(task_type, start_progress, end_progress, duration=8):
     """Simulate progress increment during subprocess execution"""
@@ -1407,12 +1128,10 @@ def server_error(e):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=app.config['DEBUG'])
-    '''
+    #app.run(host='0.0.0.0', port=port, debug=app.config['DEBUG'])
     try:
         app.run(host='0.0.0.0', port=port, debug=app.config['DEBUG'])
     except KeyboardInterrupt:
         print("\n[SHUTDOWN] Interrupted")
     finally:
         progress_cleanup()
-    '''

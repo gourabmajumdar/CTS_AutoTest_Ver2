@@ -38,5 +38,6 @@ static/uploads/*
 Thumbs.db
 
 
-# Generated reports
+# Generated reports & scripts
 generated-scripts/
+reports/

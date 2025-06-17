@@ -1,9 +1,10 @@
 CODE REVIEW SUMMARY
 ====================
-Generated at: 2025-06-16 15:29:53
-Files analyzed: 3
-  - generated-scripts/check_the_router_mode_of_the_device.py
+Generated at: 2025-06-17 11:47:05
+Files analyzed: 4
   - generated-scripts/check_the_cable_modem_ip_address_of_the_device.py
+  - generated-scripts/check_the_router_mode_of_the_device.py
+  - generated-scripts/check_the_mac_address_of_the_device.py
   - generated-scripts/check_the_ssid_name_of_the_device.py
 
 BLACK - CODE FORMATTING: ✅
@@ -19,6 +20,6 @@ BANDIT - SECURITY ANALYSIS: ⚠️
   Status: Issues Found
 
 PYLINT - STATIC CODE ANALYSIS: ❌
-  Return Code: 22
+  Return Code: 20
   Status: Issues Found
 
