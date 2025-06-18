@@ -1,9 +1,8 @@
 linting:
   pylint: " --max-line-length=120 --output-format=parseable:reports/pylint_output.txt,parseable --disable=C0114,C0116,import-error --fail-under=8"
-  flake8: --max-line-length=120 --ignore=B007,E302,E305 --output-file=reports/flake8_output.txt
+  flake8: --max-line-length=120 --ignore=E302,E305 --output-file=reports/flake8_output.txt
   black: --diff --line-length=120
 
 
 security:
   bandit: "-r -f html -o reports/bandit_output.html"
-

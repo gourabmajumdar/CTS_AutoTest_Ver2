@@ -1,11 +1,8 @@
 CODE REVIEW SUMMARY
 ====================
-Generated at: 2025-06-17 11:47:05
-Files analyzed: 4
+Generated at: 2025-06-18 11:29:32
+Files analyzed: 1
   - generated-scripts/check_the_cable_modem_ip_address_of_the_device.py
-  - generated-scripts/check_the_router_mode_of_the_device.py
-  - generated-scripts/check_the_mac_address_of_the_device.py
-  - generated-scripts/check_the_ssid_name_of_the_device.py
 
 BLACK - CODE FORMATTING: ✅
   Return Code: 0
@@ -19,7 +16,7 @@ BANDIT - SECURITY ANALYSIS: ⚠️
   Return Code: 1
   Status: Issues Found
 
-PYLINT - STATIC CODE ANALYSIS: ❌
-  Return Code: 20
-  Status: Issues Found
+PYLINT - STATIC CODE ANALYSIS: ✅
+  Return Code: 0
+  Status: Success
 

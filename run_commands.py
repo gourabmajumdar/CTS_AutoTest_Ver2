@@ -72,7 +72,7 @@ def run_command_to_file(command, output_file):
             file.write(f"{result.stderr}\n")
     return result
 
-
+'''
 def run_tool_on_single_file(tool_name, file_path, options, file_index=None):
     """Run a specific tool on a single file and return result"""
 
@@ -118,7 +118,88 @@ def run_tool_on_single_file(tool_name, file_path, options, file_index=None):
             'stdout': result.stdout,
             'stderr': result.stderr
         }
+'''
 
+def run_tool_on_single_file(tool_name, file_path, options, file_index=None):
+    """Run a specific tool on a single file and return result"""
+    # Special handling for Bandit to avoid overwriting HTML files
+    if tool_name == "bandit":
+        # For individual files, use unique HTML output files
+        if file_index is not None:
+            individual_html_file = f"reports/bandit_output_{file_index}.html"
+            # Modify options to output to individual file
+            modified_options = options.replace("reports/bandit_output.html", individual_html_file)
+        else:
+            # Fallback for when no index provided
+            individual_html_file = f"reports/bandit_temp_{os.path.basename(file_path)}.html"
+            modified_options = options.replace("reports/bandit_output.html", individual_html_file)
+
+        # Run bandit with modified output file
+        command = f"{tool_name} {file_path} {modified_options}"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, encoding="utf-8")
+
+        # Read the generated HTML file for stdout content
+        html_content = ""
+        if os.path.exists(individual_html_file):
+            try:
+                with open(individual_html_file, "r", encoding="utf-8") as f:
+                    html_content = f.read()
+            except Exception as e:
+                html_content = f"Error reading HTML file: {e}"
+
+        return {
+            'returncode': result.returncode,
+            'success': result.returncode == 0,
+            'stdout': html_content,  # HTML content for display
+            'stderr': result.stderr,
+            'html_file': individual_html_file  # Track the HTML file location
+        }
+    # Special handling for flake8 with --output-file
+    elif tool_name == "flake8" and "--output-file=" in options:
+        # For individual files, use unique output files
+        if file_index is not None:
+            individual_output_file = f"reports/flake8_output_{file_index}.txt"
+            # Modify options to output to individual file
+            modified_options = options.replace("reports/flake8_output.txt", individual_output_file)
+        else:
+            # Fallback for when no index provided
+            individual_output_file = f"reports/flake8_temp_{os.path.basename(file_path)}.txt"
+            modified_options = options.replace("reports/flake8_output.txt", individual_output_file)
+
+        # Run flake8 with modified output file
+        command = f"{tool_name} {file_path} {modified_options}"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, encoding="utf-8")
+
+        # Read the generated output file for stdout content
+        output_content = ""
+        if os.path.exists(individual_output_file):
+            try:
+                with open(individual_output_file, "r", encoding="utf-8") as f:
+                    output_content = f.read()
+            except Exception as e:
+                output_content = f"Error reading output file: {e}"
+
+        # If file is empty, flake8 found no issues
+        if not output_content.strip():
+            output_content = "No issues found by flake8."
+
+        return {
+            'returncode': result.returncode,
+            'success': result.returncode == 0,
+            'stdout': output_content,  # File content for display
+            'stderr': result.stderr,
+            'output_file': individual_output_file  # Track the output file location
+        }
+    else:
+        # Standard handling for other tools
+        command = f"{tool_name} {file_path} {options}"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, encoding="utf-8")
+        return {
+            'returncode': result.returncode,
+            'success': result.returncode == 0,
+            'stdout': result.stdout,
+            'stderr': result.stderr
+        }
 
 def create_reports_folder():
     """Creates the reports folder if it does not exist."""

@@ -1,5 +1,4 @@
 from time import sleep
-
 import paramiko
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import os
@@ -84,34 +83,6 @@ def parse_multiple_test_cases_from_content(content, filename):
     print(f"[PARSE] Found {len(parsed_test_cases)} test cases in {filename}")
     return parsed_test_cases
 
-'''
-def create_individual_files_for_multi_case(parsed_test_cases, original_filename, timestamp_prefix):
-    """Create individual files for each test case found in a multi-case file"""
-    created_files = []
-
-    for i, test_case in enumerate(parsed_test_cases):
-        # Create filename: timestamp_originalname_part1.txt, timestamp_originalname_part2.txt, etc.
-        base_name = original_filename.replace('.txt', '').replace('.rtf', '')
-        new_filename = f"{timestamp_prefix}_{base_name}_part{i + 1}.txt"
-        new_filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-
-        # Write individual test case to file
-        with open(new_filepath, 'w', encoding='utf-8') as f:
-            f.write(test_case['content'])
-
-        created_files.append({
-            'filename': new_filename,
-            'test_case_name': test_case['test_case_name'],
-            'section_index': test_case['section_index'],
-            'original_file': original_filename
-        })
-
-        print(f"[CREATE] Created individual file: {new_filename}")
-
-    return created_files
-'''
-
-
 def create_individual_files_for_multi_case(parsed_test_cases, original_filename, timestamp_prefix):
     """Create individual files for each test case found in a multi-case file with sequential timestamps"""
     created_files = []
@@ -152,6 +123,7 @@ def create_individual_files_for_multi_case(parsed_test_cases, original_filename,
         print(f"[CREATE] Created individual file: {new_filename} (timestamp: {individual_timestamp_prefix})")
 
     return created_files
+
 # ================================================================================================
 # PROGRESS FILES CLEANUP FUNCTIONS
 # ================================================================================================
@@ -267,7 +239,7 @@ def index():
 uploaded_files_global = []
 generated_scripts_info = []
 
-
+'''
 @app.route('/upload', methods=['POST'])
 def upload_files():
     """Handle file uploads"""
@@ -333,7 +305,85 @@ def upload_files():
     except Exception as e:
         print(f"Upload error: {str(e)}")
         return jsonify({'success': False, 'message': f'Upload error: {str(e)}'})
+'''
 
+@app.route('/upload', methods=['POST'])
+def upload_files():
+    """Handle file uploads"""
+    global uploaded_files_global
+
+    # Cleanup any progress JSON files at the start
+    progress_cleanup()
+
+    try:
+        # *** SIMPLE CLEANUP: Remove all existing files from test_case folder ***
+        test_case_folder = app.config['UPLOAD_FOLDER']
+        if os.path.exists(test_case_folder):
+            for filename in os.listdir(test_case_folder):
+                file_path = os.path.join(test_case_folder, filename)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            print(f"[CLEANUP] Cleaned test_case folder before upload")
+
+        if 'files' not in request.files:
+            return jsonify({'success': False, 'message': 'No files selected'})
+
+        files = request.files.getlist('files')
+        uploaded_files = []
+        total_size = 0
+
+        # *** NEW: Get base timestamp once for all files ***
+        base_timestamp = datetime.now()
+        base_timestamp_str = base_timestamp.strftime('%Y%m%d_%H%M%S%f')[:-3]  # Include milliseconds
+        base_timestamp_int = int(base_timestamp_str.split('_')[1])  # Extract time part as integer
+
+        for i, file in enumerate(files):
+            if file.filename == '':
+                continue
+
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+
+                # *** NEW: Create incremental timestamp for each file ***
+                # Add incremental seconds to ensure unique timestamps: +0, +1, +2, +3 seconds
+                incremented_time = base_timestamp_int + i
+                date_part = base_timestamp_str.split('_')[0]  # Extract date part
+                unique_timestamp = f"{date_part}_{incremented_time:09d}_"
+
+                filename = unique_timestamp + filename
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+
+                file_size = os.path.getsize(file_path)
+                total_size += file_size
+
+                uploaded_files.append({
+                    'name': file.filename,
+                    'size': file_size,
+                    'path': filename
+                })
+
+                print(
+                    f"[UPLOAD] File {i + 1}: {file.filename} -> {filename} (timestamp: {unique_timestamp.rstrip('_')})")
+            else:
+                print(f"File not allowed: {file.filename}")
+
+        # Store uploaded files globally
+        uploaded_files_global = uploaded_files
+
+        if uploaded_files:
+            return jsonify({
+                'success': True,
+                'files': uploaded_files,
+                'total_size': total_size,
+                'message': f'Successfully uploaded {len(uploaded_files)} file(s)'
+            })
+        else:
+            return jsonify({'success': False, 'message': 'No valid files uploaded. Please check file types.'})
+
+    except Exception as e:
+        print(f"Upload error: {str(e)}")
+        return jsonify({'success': False, 'message': f'Upload error: {str(e)}'})
 
 @app.route('/ingest', methods=['POST'])
 def ingest_test():
